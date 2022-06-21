@@ -37,8 +37,8 @@ def check_bucket_versioning(bucket_issues={}):
                 bucket_issues[bucket_name].append({cis_id: msg})
                 LOGGER.warning(f'{msg} for {bucket_name}')
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:
@@ -95,8 +95,8 @@ def check_bucket_encryption(bucket_issues={}):
             LOGGER.error(f'{msg} for {bucket_name}')
             count += 1
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:
@@ -145,8 +145,8 @@ def check_bucket_policy(bucket_issues={}):
             bucket_issues[bucket_name].append(msg)
             LOGGER.error(f'{msg} for {bucket_name}')
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:
@@ -159,11 +159,9 @@ def check_bucket_policy(bucket_issues={}):
 
 
 # 2.1.5, 3.3
-# $ aws cloudtrail describe-trails --query 'trailList[*].S3BucketName'
-# $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AllUsers` ]'
-# $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AuthenticatedUsers` ]'
+
 # $ aws s3api get-bucket-policy --bucket <bucket_name>
-# aws s3api get-bucket-acl --region us-gov-west-1 --bucket <bucket_name>
+
 # aws s3api get-public-access-block --region us-gov-west-1 --bucket <bucket_name>
 def check_bucket_public_access(bucket_issues={}):
     count = 0
@@ -175,8 +173,9 @@ def check_bucket_public_access(bucket_issues={}):
         restricted_privuser_acl_exists = False
         restricted_anonymous_access_exists = False
 
+        # Public Access Block Configuration
         try:
-            # Public Access Block Configuration
+            # aws s3api get-bucket-acl --region us-gov-west-1 --bucket <bucket_name>
             pab_response = S3_CLIENT.get_public_access_block(
                 Bucket=bucket_name,
                 ExpectedBucketOwner=AWS_ACCOUNT)
@@ -190,19 +189,21 @@ def check_bucket_public_access(bucket_issues={}):
             msg = 'NO public access block configuration'
             # LOGGER.error(f'{msg} for {bucket_name}')
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:
             LOGGER.error(f'ClientError: {client_error}')
 
+        # Access Control List restricting Public Access
         try:
-            # Access Control List restricting Public Access
             acl_response = S3_CLIENT.get_bucket_acl(
                 Bucket=bucket_name,
                 ExpectedBucketOwner=AWS_ACCOUNT)
-
+            
+            # $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AllUsers` ]'
+            # $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AuthenticatedUsers` ]'
             # FIXME if URI for s3 logging exists, http://acs.amazonaws.com/groups/s3/LogDelivery, Anonymous User access logic is skipped?
             for grant in acl_response['Grants']:
                 if 'http://acs.amazonaws.com/groups/global/AllUsers' not in grant['Grantee'].values():
@@ -222,8 +223,8 @@ def check_bucket_public_access(bucket_issues={}):
                 if(not (policy['Effect'] == 'Allow' and policy['Principal'] == '*')):
                     restricted_anonymous_access_exists = True
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:

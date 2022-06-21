@@ -41,12 +41,6 @@ $ aws cloudtrail get-event-selectors --trail-name cloudtrail-multi-region
     ]
 }
 
-$ aws cloudtrail get-trail-status --name prod-cloudtrail-logs --query ['IsLogging']
-
-
-$ aws cloudtrail describe-trails --region us-gov-west-1 --query trailList[*].CloudWatchLogsLogGroupArn
-$ aws cloudtrail get-trail-status --name prod-cloudtrail-logs --query ['LatestDeliveryTime']
-
 
 $ aws configservice describe-configuration-recorders
 {
@@ -141,8 +135,8 @@ def check_cloudtrail(trail_issues={}):
             trail_issues[trail_name].append(msg)
             LOGGER.error(f'{msg} for {trail_name}')
 
-        except KeyError:
-            msg = "No such key found"
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
             LOGGER.error(f'{msg} for {trail_name}')
 
         except ClientError as client_error:
@@ -155,6 +149,9 @@ def check_cloudtrail(trail_issues={}):
             LOGGER.warning(f'{msg}')
 
         # ensure logging to S3
+        # $ aws cloudtrail get-trail-status --name prod-cloudtrail-logs --query ['IsLogging']
+        # $ aws cloudtrail describe-trails --region us-gov-west-1 --query trailList[*].CloudWatchLogsLogGroupArn
+        # $ aws cloudtrail get-trail-status --name prod-cloudtrail-logs --query ['LatestDeliveryTime']
         try:
             response = S3_CLIENT.get_bucket_logging(
                 Bucket=bucket_name,
@@ -169,9 +166,9 @@ def check_cloudtrail(trail_issues={}):
                 trail_issues[trail_name].append({cis_id: msg})
                 LOGGER.warning(f'{msg}')
 
-        except KeyError:
-            msg = "No such key found"
-            LOGGER.error(f'{msg} for {trail_name}')
+        except KeyError as key_err:
+            msg = f"No such key {key_err} found"
+            LOGGER.error(f'{msg} for {bucket_name}')
 
         except ClientError as client_error:
             LOGGER.error(f'ClientError: {client_error}')
