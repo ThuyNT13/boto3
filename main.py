@@ -8,12 +8,14 @@ def main():
     # no_of_runs = 2
     # print_execution_time(check_bucket_encryption.__name__, no_of_runs)
 
-    # buckets = check_bucket_public_access()
-    # buckets = check_bucket_policy()
-    # print(buckets)
+    bucket_issues = check_bucket_encryption()
+    bucket_issues = check_bucket_policy(bucket_issues)
+    bucket_issues = check_bucket_public_access(bucket_issues)
+    bucket_issues = check_bucket_versioning(bucket_issues)
+    print(bucket_issues)
 
-    trails = check_cloudtrail()
-    print(trails)
+    # trails = check_cloudtrail()
+    # print(trails)
 
 
 if __name__ == '__main__':
