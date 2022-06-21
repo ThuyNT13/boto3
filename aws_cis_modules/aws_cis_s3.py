@@ -37,7 +37,9 @@ def check_bucket_versioning(bucket_issues={}):
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
         except KeyError as key_err:
             msg = f"No such key {key_err} found"
@@ -90,7 +92,9 @@ def check_bucket_encryption(bucket_issues={}):
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
         except S3_CLIENT.exceptions.from_code('ServerSideEncryptionConfigurationNotFoundError'):
             msg = 'NO server side encryption config'
@@ -98,9 +102,9 @@ def check_bucket_encryption(bucket_issues={}):
 
             if bucket_name not in bucket_issues.keys():
                 bucket_issues[bucket_name] = []
-            bucket_issues[bucket_name].append({msg})
-            
-            count += 1
+
+            if msg not in bucket_issues[bucket_name]:
+                bucket_issues[bucket_name].append({msg})
 
         except KeyError as key_err:
             msg = f"No such key {key_err} found"
@@ -146,17 +150,19 @@ def check_bucket_policy(bucket_issues={}):
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
         except S3_CLIENT.exceptions.from_code('NoSuchBucketPolicy'):
             msg = 'NO Bucket Policy'
             LOGGER.error(f'{msg} for {bucket_name}')
 
-            # FIXME adjust logic for redundant bucket_issues[bucket_name].values()
             if bucket_name not in bucket_issues.keys():
                 bucket_issues[bucket_name] = []
 
-            bucket_issues[bucket_name].append(msg)
+            if msg not in bucket_issues[bucket_name]:
+                bucket_issues[bucket_name].append(msg)
 
         except KeyError as key_err:
             msg = f"No such key {key_err} found"
@@ -214,7 +220,7 @@ def check_bucket_public_access(bucket_issues={}):
             acl_response = S3_CLIENT.get_bucket_acl(
                 Bucket=bucket_name,
                 ExpectedBucketOwner=AWS_ACCOUNT)
-            
+
             # $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AllUsers` ]'
             # $ aws s3api get-bucket-acl --bucket <bucket_name> --query 'Grants[?Grantee.URI== `http://acs.amazonaws.com/groups/global/AuthenticatedUsers` ]'
             # FIXME if URI for s3 logging exists, http://acs.amazonaws.com/groups/s3/LogDelivery, Anonymous User access logic is skipped?
@@ -240,11 +246,11 @@ def check_bucket_public_access(bucket_issues={}):
             msg = 'NO Bucket Policy'
             LOGGER.error(f'{msg} for {bucket_name}')
 
-            # FIXME adjust logic for redundant bucket_issues[bucket_name].values()
             if bucket_name not in bucket_issues.keys():
                 bucket_issues[bucket_name] = []
 
-            bucket_issues[bucket_name].append(msg)
+            if msg not in bucket_issues[bucket_name]:
+                bucket_issues[bucket_name].append(msg)
 
         except KeyError as key_err:
             msg = f"No such key {key_err} found"
@@ -263,32 +269,40 @@ def check_bucket_public_access(bucket_issues={}):
             cis_id = "2.1.5"
 
             if(not public_access_block_exists):
-                msg = 'NO public access block configuration'
+                msg = 'NO Public Access Block configuration'
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append(msg)
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
             if(not restricted_alluser_acl_exists):
                 msg = "AllUser access"
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
             if(not restricted_privuser_acl_exists):
                 msg = "AuthenticatedUsers access"
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
             if(not restricted_anonymous_access_exists):
                 msg = 'Anonymous Principal access'
 
                 if bucket_name not in bucket_issues.keys():
                     bucket_issues[bucket_name] = []
-                bucket_issues[bucket_name].append({cis_id: msg})
+
+                if msg not in bucket_issues[bucket_name]:
+                    bucket_issues[bucket_name].append({cis_id: msg})
 
             count += 1
 
